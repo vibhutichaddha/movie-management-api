@@ -1,62 +1,117 @@
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Query 
+from fastapi import APIRouter, HTTPException, Query, status
 from data import movies
-from models import MessageResponse, Movie, Movie_update
+from models import MessageResponse, Movie, MovieUpdate
 router=APIRouter()
-@router.post("/movies",response_model=Movie,status_code=201)
+@router.post("/movies",response_model=Movie,status_code=status.HTTP_201_CREATED)
 def add_movie(movie:Movie):
-    if movie.Movie_ID<=0:
+    """
+    Add a new movie to the movie collection.
+
+    Parameters:
+        movie: Movie information provided in the request body.
+
+    Returns:
+        The newly added movie.
+    """
+    if movie.movie_id<=0:
         raise HTTPException(
-            status_code=400, 
+            status_code=status.HTTP_400_BAD_REQUEST, 
             detail="Invalid Movie ID")
     for existing_movie in movies:
-        if existing_movie.Movie_ID==movie.Movie_ID:
+        if existing_movie.movie_id==movie.movie_id:
             raise HTTPException(
-                status_code=409, 
+                status_code=status.HTTP_409_CONFLICT, 
                 detail="Movie already exists")
     movies.append(movie)
-    return movie
-@router.get("/movies",response_model=list[Movie])
+    return movie 
+@router.get("/movies",response_model=list[Movie],status_code=status.HTTP_200_OK)
 def get_all_movies():
-    return movies
-@router.get("/movies/search",response_model=list[Movie])
-def search_movie(Genre:Optional[str]=Query(default=None),Language:Optional[str]=Query(default=None),Rating:Optional[float]=Query(default=None,ge=0,le=10),Release_Year:Optional[int]=Query(default=None)):
-    result=movies
-    if Genre is not None:
-        result=[movie for movie in result if movie.Genre.lower()==Genre.lower()]
-    if Language is not None:
-        result=[movie for movie in result if movie.Language.lower()==Language.lower()]
-    if Rating is not None:
-        result=[movie for movie in result if movie.Rating==Rating]
-    if Release_Year is not None:
-        result=[movie for movie in result if movie.Release_Year==Release_Year]
-    return result
-@router.get("/movies/{Movie_ID}",response_model=Movie)
-def get_movie_by_id(Movie_ID:int):
-    if Movie_ID<=0:
-        raise HTTPException(status_code=400,detail="Invalid Movie ID")
+     """
+    Retrieve all available movies.
+
+    Returns:
+        A list containing all movie records.
+    """
+     return movies
+@router.get("/movies/search",response_model=list[Movie],status_code=status.HTTP_200_OK)
+def search_movie(genre:Optional[str]=Query(default=None),language:Optional[str]=Query(default=None),rating:Optional[float]=Query(default=None,ge=0,le=10),release_year:Optional[int]=Query(default=None)):
+     """
+    Search movies using genre, language, rating, or release year.
+
+    Parameters:
+        genre: Genre of the movie.
+        language: Language of the movie.
+        rating: Rating of the movie.
+        release_year: Release year of the movie.
+
+    Returns:
+        A list of matching movies or a message when no movies are found.
+    """
+     result=movies
+     if genre is not None:
+        result=[movie for movie in result if movie.genre.lower()==genre.lower()]
+     if language is not None:
+        result=[movie for movie in result if movie.language.lower()==language.lower()]
+     if rating is not None:
+        result=[movie for movie in result if movie.rating==rating]
+     if release_year is not None:
+        result=[movie for movie in result if movie.release_year==release_year]
+     return result
+@router.get("/movies/{movie_id}",response_model=Movie,status_code=status.HTTP_200_OK)
+def get_movie_by_id(movie_id:int):
+    """
+    Retrieve a movie using its unique Movie ID.
+
+    Parameters:
+        movie_id: Unique ID of the movie.
+
+    Returns:
+        Movie details for the provided ID.
+    """
+    if movie_id<=0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Invalid Movie ID")
     for movie in movies:
-        if movie.Movie_ID==Movie_ID:
+        if movie.movie_id==movie_id:
             return movie
-    raise HTTPException(status_code=404,detail="Movie not found")
-@router.put("/movies/{Movie_ID}",response_model=Movie)
-def update_movie(Movie_ID:int,updated_movie: Movie_update):
-    if Movie_ID<=0:
-        raise HTTPException(status_code=400,detail="Invalid Movie ID")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Movie not found")
+@router.put("/movies/{movie_id}",response_model=Movie,status_code=status.HTTP_200_OK)
+def update_movie(movie_id:int,updated_movie: MovieUpdate):
+    """
+    Update the details of an existing movie.
+
+    Parameters:
+        movie_id: Unique ID of the movie.
+        updated_movie: Updated movie information.
+
+    Returns:
+        The updated movie record.
+    """
+    if movie_id<=0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Invalid Movie ID")
     for index,movie in enumerate(movies):
-        if movie.Movie_ID==Movie_ID:
+        if movie.movie_id==movie_id:
             movie_data=updated_movie.model_dump()
             movies[index]=Movie(
-                Movie_ID=Movie_ID,
+                movie_id=movie_id,
                 **movie_data)
             return movies[index]
-    raise HTTPException(status_code=404,detail="Movie not found")
-@router.delete("/movies/{Movie_ID}",response_model=MessageResponse)
-def delete_movie(Movie_ID:int):
-    if Movie_ID<=0:
-        raise HTTPException(status_code=400,detail="Invalid Movie ID")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Movie not found")
+@router.delete("/movies/{movie_id}",response_model=MessageResponse,status_code=status.HTTP_200_OK)
+def delete_movie(movie_id:int):
+    """
+    Delete a movie using its unique Movie ID.
+
+    Parameters:
+        movie_id: Unique ID of the movie.
+
+    Returns:
+        A confirmation message after successful deletion.
+    """
+    if movie_id<=0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Invalid Movie ID")
     for movie in movies:
-        if movie.Movie_ID==Movie_ID:
+        if movie.movie_id==movie_id:
             movies.remove(movie)
             return{"message":"Movie deleted successfully"}
-    raise HTTPException(status_code=404,detail="Movie not found")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Movie not found")

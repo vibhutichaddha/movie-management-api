@@ -79,6 +79,61 @@ Example:
 
 `GET /movies/search?genre=Action`
 
+## How to Run
+
+### Clone the Repository
+
+Clone the project repository and navigate to the project directory.
+
+### Create and Activate a Virtual Environment
+
+Create a Python virtual environment to manage project dependencies.
+
+On Linux:
+
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Install Dependencies
+
+Install all required project dependencies using the requirements file.
+
+```
+pip install -r requirements.txt
+```
+
+### Run the Server
+
+Start the FastAPI application using Uvicorn.
+
+```
+uvicorn main:app --reload
+```
+
+The API will be available on the local development server.
+
+### Swagger UI
+
+Open the following endpoint in the browser:
+
+```
+/docs
+```
+
+Swagger UI provides an interactive interface for testing all API endpoints.
+
+### ReDoc
+
+Open the following endpoint in the browser:
+
+```
+/redoc
+```
+
+ReDoc provides structured and readable API documentation.
+
 ## Validation Rules
 
 The API performs validation on movie data before storing or updating records.
